@@ -1,5 +1,5 @@
 /*!                                                              
- * LeapJS Widgets v0.1.0                                          
+ * LeapJS Widgets v0.1.1                                          
  * http://github.com/leapmotion/leapjs-widgets/                                
  *                                                                             
  * Copyright 2013 LeapMotion, Inc. and other contributors                      
@@ -1623,10 +1623,19 @@ THREE.Mesh.prototype.intersectedByLine = function(lineStart, lineEnd, worldPosit
   var p0 = worldPosition || this.position; // note that this is local, which would be buggy for nested objects (!)
   var l0 = lineStart;
   // the normal of any face will be the normal of the plane.
-  var n  = this.getWorldDirection();
-  var l = lineEnd.clone().sub(lineStart);  // order shouldn't matter here.  And they didn't SAY normalize.
+  //PJT started editing because more recent versions of THREE warn about getWorldDirection without target.
+  //While I'm here, changing to avoid all instances of 'new', including indirect via clone()
+  //Organising reusable temp vectors into userData.intersectTemp to reduce pollution of Mesh.
+  const v = THREE.Vector3;
+  this.userData.intersectTemp || (this.userData.intersectTemp = {n: new v, l: new v, p0: new v});
+  const t = this.userData.intersectTemp;
+  
+  var n = this.getWorldDirection(t.n);
+  //var l = lineEnd.clone().sub(lineStart);  // order shouldn't matter here.  And they didn't SAY normalize.
+  var l = t.l.subVectors(lineEnd, lineStart);  // order shouldn't matter here.  And they didn't SAY normalize.
 
-  var numerator = p0.clone().sub(l0).dot(n);
+  //var numerator = p0.clone().sub(l0).dot(n);
+  var numerator = t.p0.dot(n);
   var denominator = l.dot(n);
 
   if (numerator === 0){
@@ -1641,15 +1650,19 @@ THREE.Mesh.prototype.intersectedByLine = function(lineStart, lineEnd, worldPosit
     return false;
   }
 
-  var intersectionPoint = l.clone().multiplyScalar(numerator / denominator).add(l0);
+  // var intersectionPoint = l.clone().multiplyScalar(numerator / denominator).add(l0);
+  var intersectionPoint = l.multiplyScalar(numerator / denominator).add(l0);
 
   // see if point is on line segment (add vectors A B C)
 
   // a,b = lineEnds 1,2
   // c = interSectionPoint
 
-  var dot = lineEnd.clone().sub(lineStart).dot(
-    intersectionPoint.clone().sub(lineStart)
+  // var dot = lineEnd.clone().sub(lineStart).dot(
+  //   intersectionPoint.clone().sub(lineStart)
+  // );
+  var dot = l.subVectors(lineEnd, lineStart).dot(
+    n.subVectors(intersectionPoint, lineStart)
   );
 
   if (dot < 0) {
@@ -1657,7 +1670,8 @@ THREE.Mesh.prototype.intersectedByLine = function(lineStart, lineEnd, worldPosit
     return false;
   }
 
-  var lengthSq = lineEnd.clone().sub(lineStart).lengthSq();
+  // var lengthSq = lineEnd.clone().sub(lineStart).lengthSq();
+  var lengthSq = l.subVectors(lineEnd, lineStart).lengthSq();
 
   if (dot > lengthSq) {
     this.intersectionPoint = null;
@@ -1671,7 +1685,8 @@ THREE.Mesh.prototype.intersectedByLine = function(lineStart, lineEnd, worldPosit
   // This will be useful for frame travel of farther than a plane half.
   this.intersectionPoint = intersectionPoint;
 
-  return this.pointOverlap( intersectionPoint.clone() ) ? intersectionPoint : false;
+  //return this.pointOverlap( intersectionPoint.clone() ) ? intersectionPoint : false;
+  return this.pointOverlap( p0.copy(intersectionPoint) ) ? intersectionPoint : false;
 
 };
 // Returns the coordinates in local space of the point relative to the mesh.
