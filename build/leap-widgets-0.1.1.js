@@ -1,11 +1,3 @@
-/*!                                                              
- * LeapJS Widgets v0.1.1                                          
- * http://github.com/leapmotion/leapjs-widgets/                                
- *                                                                             
- * Copyright 2013 LeapMotion, Inc. and other contributors                      
- * Released under the Apache-2.0 license                                       
- * http://github.com/leapmotion/leapjs-widgets/blob/master/LICENSE             
- */
 (function() {
   'use strict';
 
@@ -270,17 +262,18 @@ window.InteractablePlane.prototype = {
   },
 
   getPushthrough: function(hands, offset){
-
+    //-----> finger tip? Less 'new'? Surely this can be way simpler.
     var hand, key, overlap, overlapPoint, sumPushthrough = 0, countPushthrough = 0, min = Infinity;
 
-    // todo, make sure there's no frame lag in matrixWorld
+    // todo, make sure there's no frame lag in matrixWorld //<----
     // (corners may be updated matrix world, causing this to coincidentally work)
     var inverseMatrix = (new THREE.Matrix4).getInverse(this.mesh.matrixWorld); // memoize
 
     for (var i = 0; i < hands.length; i++) {
       hand = hands[i];
 
-      var points = this.interactiveJoints(hand);
+      //var points = this.interactiveJoints(hand); //PJT simplify...
+      const points = hand.fingers.map(f => f.tipPosition); //XXX: arrow function incompatible with old version of uglify
       for (var j = 0; j < points.length; j++) {
         key = hand.id + "-" + j;
 
@@ -731,7 +724,11 @@ window.InteractablePlane.prototype = {
   },
 
   // Returns the position in world space of every joint which should be able to move a plane in Z.
-  interactiveJoints: function(hand){
+  //XXX PJT:: changed to use tipPosition in place of dipPosition, now not using this function at all...
+  //but I'm not convinced this was really doing what it claimed anyway.
+  //I seem to be getting pretty much the right result, in VR at least, by just using hand.fingers.tipPosition
+  //with no extra transformation.
+  interactiveJoints: function(hand){ 
     var finger, out = [];
 
     for (var i = 0; i < 5; i++) {
@@ -749,8 +746,9 @@ window.InteractablePlane.prototype = {
       Leap.vec3.add(offset, endPos, offset);
 
       out.push(
-        finger.pipPosition,
-        finger.dipPosition,
+        finger.pipPosition, 
+        //finger.dipPosition, //<------ 'the joint closest to the tip'? we want the tip itself finger.tipPosition
+        finger.tipPosition,
         offset
       );
 
@@ -1635,7 +1633,7 @@ THREE.Mesh.prototype.intersectedByLine = function(lineStart, lineEnd, worldPosit
   var l = t.l.subVectors(lineEnd, lineStart);  // order shouldn't matter here.  And they didn't SAY normalize.
 
   //var numerator = p0.clone().sub(l0).dot(n);
-  var numerator = t.p0.dot(n);
+  var numerator = t.p0.subVectors(p0, l0).dot(n);
   var denominator = l.dot(n);
 
   if (numerator === 0){
