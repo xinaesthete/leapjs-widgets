@@ -267,8 +267,10 @@ window.InteractablePlane.prototype = {
 
     // todo, make sure there's no frame lag in matrixWorld //<----
     // (corners may be updated matrix world, causing this to coincidentally work)
-    var inverseMatrix = (new THREE.Matrix4).getInverse(this.mesh.matrixWorld); // memoize
+    this.__tempMatrix || (this.__tempMatrix = new THREE.Matrix4);
+    var inverseMatrix = this.__tempMatrix.getInverse(this.mesh.matrixWorld); // memoize
 
+    const vec = this.__tempVec || (this.__tempVec = new THREE.Vector3);
     for (var i = 0; i < hands.length; i++) {
       hand = hands[i];
 
@@ -278,7 +280,7 @@ window.InteractablePlane.prototype = {
         key = hand.id + "-" + j;
 
         overlapPoint = this.mesh.pointOverlap(
-          (new THREE.Vector3).fromArray(points[j]),
+          vec.fromArray(points[j]),
           inverseMatrix
         );
 
