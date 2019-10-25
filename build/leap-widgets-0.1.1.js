@@ -1,3 +1,11 @@
+/*!                                                              
+ * LeapJS Widgets v0.1.1                                          
+ * http://github.com/leapmotion/leapjs-widgets/                                
+ *                                                                             
+ * Copyright 2013 LeapMotion, Inc. and other contributors                      
+ * Released under the Apache-2.0 license                                       
+ * http://github.com/leapmotion/leapjs-widgets/blob/master/LICENSE             
+ */
 (function() {
   'use strict';
 
@@ -273,7 +281,7 @@ window.InteractablePlane.prototype = {
       hand = hands[i];
 
       //var points = this.interactiveJoints(hand); //PJT simplify...
-      const points = hand.fingers.map(f => f.tipPosition); //XXX: arrow function incompatible with old version of uglify
+      const points = hand.fingers.map(function(f) {return f.tipPosition}); //XXX: arrow function incompatible with old version of uglify
       for (var j = 0; j < points.length; j++) {
         key = hand.id + "-" + j;
 

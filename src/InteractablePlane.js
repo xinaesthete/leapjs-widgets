@@ -273,7 +273,7 @@ window.InteractablePlane.prototype = {
       hand = hands[i];
 
       //var points = this.interactiveJoints(hand); //PJT simplify...
-      const points = hand.fingers.map(f => f.tipPosition); //XXX: arrow function incompatible with old version of uglify
+      const points = hand.fingers.map(function(f) {return f.tipPosition}); //XXX: arrow function incompatible with old version of uglify
       for (var j = 0; j < points.length; j++) {
         key = hand.id + "-" + j;
 
