@@ -33,7 +33,7 @@ THREE.Mesh.prototype.intersectedByLine = function(lineStart, lineEnd, worldPosit
   var l = t.l.subVectors(lineEnd, lineStart);  // order shouldn't matter here.  And they didn't SAY normalize.
 
   //var numerator = p0.clone().sub(l0).dot(n);
-  var numerator = t.p0.dot(n);
+  var numerator = t.p0.subVectors(p0, l0).dot(n);
   var denominator = l.dot(n);
 
   if (numerator === 0){
